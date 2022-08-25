@@ -20,70 +20,59 @@ Para esta prueba se van a utilizar:
 * Propuesta para soportar requerimiento de servicio "Me gusta".
 
 
-<img src="diagrama_basico.png" alt="Basic flow" />
+<img src="diagrama_basico.png" alt="basic_flow" />
 
 
-# Welcome to your CDK Python project!
+# 1- Servicio de consulta
+## URL del servicio
+* URL: https://nn3ujmde03.execute-api.us-east-1.amazonaws.com/prod/estates
+* Verbo HTTP: GET
+* filtros disponibles: `city=$city_name` - `year=$year` - `status=$property_status`
 
-You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`habi_backend_test_stack`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+* Ejemplos de peticiones con filtros:
+    - https://nn3ujmde03.execute-api.us-east-1.amazonaws.com/prod/estates?city=bogota&year=2011&status=pre_venta
+    - https://nn3ujmde03.execute-api.us-east-1.amazonaws.com/prod/estates?city=bogota
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
-This project is set up like a standard Python project.  The initialization process also creates
-a virtualenv within this project, stored under the .venv directory.  To create the virtualenv
-it assumes that there is a `python3` executable in your path with access to the `venv` package.
-If for any reason the automatic creation of the virtualenv fails, you can create the virtualenv
-manually once the init process completes.
+# 2- Servicio de "Me gusta"
 
-To manually create a virtualenv on MacOS and Linux:
+## Extención modelo de datos
 
-```
-$ python3 -m venv .venv
-```
+Para este proceso es necesario agregar una tabla intermedia entre la tabla de usuarios y
+la tabla de propiedades, de manera que se agregue un registro con cada "me gusta".
+Es importante dejar un registro de la fecha en la que se hace el "me gusta" para
+mantener mejor control y facilitar procesos de recuperación de información en caso
+de daños.
 
-After the init process completes and the virtualenv is created, you can use the following
-step to activate your virtualenv.
+<img src="me_gusta_ER.png" alt="entidad_relacion" />
 
-```
-$ source .venv/bin/activate
-```
+## Desarrollo del servicio de "Me gusta"
+Expondría un endpoint en el que, a través de una petición POST se puedan recibir un body
+con una estructura de tipo:
 
-If you are a Windows platform, you would activate the virtualenv like this:
+    {
+        "user_id": "123"
+        "property_id": "456"
+    }
 
-```
-% .venv\Scripts\activate.bat
-```
+Bastaría entonces con verificar que el body venga completo y realizar el proceso de inserción
+a base de datos. 
 
-Once the virtualenv is activated, you can install the required dependencies.
+Para posteriores búsquedas y mantener integridad en la información, es recomendable agregar un indice
+entre user_id y property_id, y garantizar que no se puedan insertar registros en la tabla
+con user_id y property_id duplicados. 
 
-```
-$ pip install -r requirements.txt
-```
+## Código SQL
 
-At this point you can now synthesize the CloudFormation template for this code.
-
-```
-$ cdk synth
-```
-
-You can now begin exploring the source code, contained in the hello directory.
-There is also a very trivial test included that can be run like this:
-
-```
-$ pytest
-```
-
-To add additional dependencies, for example other CDK libraries, just add to
-your requirements.txt file and rerun the `pip install -r requirements.txt`
-command.
-
-## Useful commands
-
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
-
-Enjoy!
+CREATE TABLE `property_likes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `property_id` int(11) NOT NULL,
+  `like_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `property_likes_id_uindex` (`id`),
+  KEY `property_likes_user_id_fk` (`user_id`),
+  KEY `property_likes_property_id_fk` (`property_id`),
+  CONSTRAINT `property_likes_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `property_likes_property_id_fk` FOREIGN KEY (`property_id`) REFERENCES `property` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
