@@ -33,6 +33,16 @@ Para esta prueba se van a utilizar:
     - https://nn3ujmde03.execute-api.us-east-1.amazonaws.com/prod/estates?city=bogota&year=2011&status=pre_venta
     - https://nn3ujmde03.execute-api.us-east-1.amazonaws.com/prod/estates?city=bogota
 
+* Ejemplo de respuesta:
+    [
+        {
+            "address": "carrera 100 #15-90w",
+            "city": "bogota",
+            "status": "pre_venta",
+            "price": 350000000,
+            "description": "Amplio apartamento en conjunto cerrado"
+        }
+    ]
 
 # 2- Servicio de "Me gusta"
 
@@ -64,15 +74,15 @@ con user_id y property_id duplicados.
 
 ## Código SQL
 
-CREATE TABLE `property_likes` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `property_id` int(11) NOT NULL,
-  `like_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `property_likes_id_uindex` (`id`),
-  KEY `property_likes_user_id_fk` (`user_id`),
-  KEY `property_likes_property_id_fk` (`property_id`),
-  CONSTRAINT `property_likes_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
-  CONSTRAINT `property_likes_property_id_fk` FOREIGN KEY (`property_id`) REFERENCES `property` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+`CREATE TABLE "property_likes" (`
+` "id" int(11) NOT NULL AUTO_INCREMENT,`
+` "user_id" int(11) NOT NULL,`
+` "property_id" int(11) NOT NULL,`
+` "like_date" datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,`
+` PRIMARY KEY ("id"),`
+` UNIQUE KEY "property_likes_id_uindex" ("id"),`
+` KEY "property_likes_user_id_fk" ("user_id"),`
+` KEY "property_likes_property_id_fk" ("property_id"),`
+` CONSTRAINT "property_likes_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "auth_user" ("id"),`
+` CONSTRAINT "property_likes_property_id_fk" FOREIGN KEY ("property_id") REFERENCES "property" ("id")`
+`) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;`
